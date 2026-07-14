@@ -10,13 +10,47 @@ html, body {
 }
 
 body {
-  background: #ebe7df;
+  background: #ffffff;
   color: #2a2520;
   font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans",
                "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
   padding: 96px 24px 160px;
+  transition: background 0.6s ease;
+}
+
+/* 18:00-6:00 (JST) */
+body.night {
+  background: #000000;
+}
+
+/* ----- blurred photo backdrop ----- */
+.bg {
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(30px);
+  opacity: 0;
+  transition: opacity 1.2s ease, background-image 0.6s ease;
+}
+
+.bg.loaded {
+  opacity: 1;
+}
+
+.bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.55);
+  transition: background 0.6s ease;
+}
+
+body.night .bg::after {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 /* ----- layout ----- */
@@ -33,7 +67,7 @@ main {
   position: relative;
   background: rgba(255, 253, 248, 0.55);
   border: 1px solid rgba(40, 35, 30, 0.22);
-  padding: 36px 36px 56px;
+  padding: 14px 14px 40px;
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
 }
@@ -41,8 +75,9 @@ main {
 .window-image {
   display: block;
   width: 100%;
-  height: auto;
-  margin-bottom: 28px;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  margin-bottom: 20px;
 }
 
 .window-text {
@@ -83,36 +118,44 @@ main {
   width: 28px;
   height: 28px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid rgba(40, 35, 30, 0.45);
+  border-radius: 6px;
   background: transparent;
   cursor: pointer;
-  position: relative;
   padding: 0;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
 .play-btn:hover {
-  background: rgba(40, 35, 30, 0.05);
+  background: rgba(40, 35, 30, 0.06);
+  border-color: rgba(40, 35, 30, 0.65);
+}
+
+.play-btn:active {
+  transform: scale(0.9);
+}
+
+.play-btn:focus-visible {
+  outline: 2px solid rgba(40, 35, 30, 0.55);
+  outline-offset: 2px;
 }
 
 .play-btn::before {
   content: '';
-  position: absolute;
-  left: 9px;
-  top: 7px;
-  width: 0;
-  height: 0;
-  border-left: 8px solid #2a2520;
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
+  width: 11px;
+  height: 12px;
+  background: #2a2520;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
 }
 
 .play-btn.playing::before {
-  left: 8px;
-  top: 7px;
   width: 9px;
   height: 12px;
-  border: none;
+  background: transparent;
+  clip-path: none;
   border-left: 3px solid #2a2520;
   border-right: 3px solid #2a2520;
 }
@@ -156,6 +199,6 @@ main {
     gap: 72px;
   }
   .window {
-    padding: 28px 24px 48px;
+    padding: 10px 10px 32px;
   }
 }

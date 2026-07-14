@@ -1,3 +1,62 @@
+// day/night: white 6:00-18:00 JST, black 18:00-6:00 JST
+function isNightNow() {
+  const jstHour = new Date(Date.now() + 9 * 60 * 60 * 1000).getUTCHours();
+  return jstHour < 6 || jstHour >= 18;
+}
+
+let currentlyNight = null;
+let backgroundPool = [];
+
+(function applyDayNight() {
+  const night = isNightNow();
+  document.body.classList.toggle('night', night);
+  if (night !== currentlyNight) {
+    currentlyNight = night;
+    updateBackground();
+  }
+  setTimeout(applyDayNight, 60 * 1000);
+})();
+
+// classify a photo as day/night by its average brightness
+function classifyImage(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 16;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      try {
+        const data = ctx.getImageData(0, 0, size, size).data;
+        let total = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          total += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        }
+        const brightness = total / (data.length / 4);
+        resolve({ src, night: brightness < 95 });
+      } catch (err) {
+        resolve({ src, night: false });
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function updateBackground() {
+  if (!backgroundPool.length) return;
+  const night = isNightNow();
+  let pool = backgroundPool.filter((p) => p.night === night);
+  if (!pool.length) pool = backgroundPool;
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  const bg = document.getElementById('bg');
+  if (!bg || !pick) return;
+  bg.style.backgroundImage = `url(${pick.src})`;
+  bg.classList.add('loaded');
+}
+
 // minimal loader: posts.json -> windows
 (async function () {
   const container = document.getElementById('windows');
@@ -16,6 +75,11 @@
   for (const post of posts) {
     container.appendChild(buildWindow(post));
   }
+
+  const imageSrcs = posts.filter((p) => p.image).map((p) => p.image);
+  const classified = await Promise.all(imageSrcs.map(classifyImage));
+  backgroundPool = classified.filter(Boolean);
+  updateBackground();
 })();
 
 function buildWindow(post) {
